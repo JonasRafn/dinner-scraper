@@ -1,0 +1,12 @@
+{
+  "name": "dinner-scraper",
+  "version": "0.0.1",
+  "description": "Scraping recipes",
+  "main": "app.js",
+  "author": "Jonas Rafn",
+  "dependencies": {
+    "cheerio": "latest",
+    "express": "latest",
+    "request": "latest"
+  }
+}

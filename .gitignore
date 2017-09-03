@@ -1,3 +1,10 @@
+### Bower ###
+bower_components
+.bower-cache
+.bower-registry
+.bower-tmp
+
+### Node ###
 # Logs
 logs
 *.log
@@ -24,7 +31,6 @@ coverage
 .grunt
 
 # Bower dependency directory (https://bower.io/)
-bower_components
 
 # node-waf configuration
 .lock-wscript
@@ -56,4 +62,13 @@ typings/
 
 # dotenv environment variables file
 .env
+
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
 
