@@ -1,52 +1,56 @@
+'use strict';
+
+/**
+ * Simple node express server used for scraping recipes on valdemarsro.dk
+ */
+
 var express = require('express');
-var fs = require('fs');
 var request = require('request');
-var rp = ('request-promise');
-var cheerio = require('cheerio');
 var app = express();
 
-app.get('/scrape', (req, res) => {
+const Scraper = require('./scraper');
+const FileHelper = require('./filehelper');
 
-	var url = 'http://www.valdemarsro.dk/surdejsboller/';
+app.get('/', (req, res) => {
+	res.send('Index');
+});
+
+app.get('/scrape', (req, res) => {
+	// var url = 'http://www.valdemarsro.dk/surdejsboller/';
+	var url = 'http://www.valdemarsro.dk/temaer/nytaar/';
+
+	var recipeData = {
+		link: url,
+		date: new Date().toISOString(),
+		recipes: []
+	};
 
 	request(url, function (error, response, html) {
 		if (error) {
 			res.send('Error occured while scraping. Error: ' + error);
 		}
 
-		var $ = cheerio.load(html);
-		var recipe = {
-			title: '',
-			ingredients: [],
-			steps: [],
-			categories: []
-		};
+		var recipeURLS = Scraper.GetListOfRecipeURLS(html);
 
-		var post = $('.post-recipe');
-		var bar = $('.recipe-bar');
+		for (var i in recipeURLS) {
+			var recipeURL = recipeURLS[i];
 
-		recipe.title = post.find('h2').text();
+			console.log('Sending request to: ' + recipeURL);
+			request(recipeURL, function (err, resp, recipeHTML) {
+				console.log('Recieved request rom: ' + recipeURL);
+				if (!err) {
+					recipeData.recipes.push(Scraper.GetRecipeFromHTML(recipeHTML, recipeURL));
+				}
 
-		var ingredients = post.find('.ingredientlist li');
-
-
-		post.find('.ingredientlist li').each(function (i, elm) {
-			recipe.ingredients.push($(this).text());
-		});
-
-		post.find('[itemprop="recipeInstructions"] p').each(function (i, elm) {
-			recipe.steps.push($(this).text());
-		});
-
-		bar.find('a').each(function (i, elm) {
-			recipe.categories.push($(this).text());
-		});
-
-		fs.writeFile('output.json', JSON.stringify(recipe), (err) => {
-			res.send('Succesfully scraped page: ' + url);
-		});
+				if (i === recipeURLS.length) {
+					console.log('End of recipes');
+					FileHelper.WriteFile('output.json', JSON.stringify(recipeData), (Error) => {
+						res.send('Succesfully scraped page: ' + url);
+					});
+				}
+			});
+		}
 	});
-
 });
 
 app.listen('3000')
