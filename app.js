@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 	res.send('Index');
 });
 
-app.get('/scrape', (req, res) => {
+app.get('/scrape', async function (req, res) {
 	// var url = 'http://www.valdemarsro.dk/surdejsboller/';
 	var url = 'http://www.valdemarsro.dk/temaer/nytaar/';
 
@@ -25,33 +25,63 @@ app.get('/scrape', (req, res) => {
 		recipes: []
 	};
 
-	request(url, function (error, response, html) {
-		if (error) {
-			res.send('Error occured while scraping. Error: ' + error);
-		}
+	console.log('ScrapeURLS Start');
+	var response = await scrapeURLS(url);
+	res.send(response);
+	// console.log(response.statusCode);
+	console.log('ScrapeURLS End');
 
-		var recipeURLS = Scraper.GetListOfRecipeURLS(html);
+	// console.log('Get List Start');
+	// recipeData.recipes = Scraper.GetListOfRecipeURLS(response);
+	// console.log('Get list End');
 
-		for (var i in recipeURLS) {
-			var recipeURL = recipeURLS[i];
+	// recipeData.recipes = await scrapeURLS(url);
 
-			console.log('Sending request to: ' + recipeURL);
-			request(recipeURL, function (err, resp, recipeHTML) {
-				console.log('Recieved request rom: ' + recipeURL);
-				if (!err) {
-					recipeData.recipes.push(Scraper.GetRecipeFromHTML(recipeHTML, recipeURL));
-				}
+	// console.log('Start response');
+	// res.send(JSON.stringify(recipeData));
+	// console.log('End response');
 
-				if (i === recipeURLS.length) {
-					console.log('End of recipes');
-					FileHelper.WriteFile('output.json', JSON.stringify(recipeData), (Error) => {
-						res.send('Succesfully scraped page: ' + url);
-					});
-				}
-			});
-		}
-	});
+	// FileHelper.WriteFile('output.json', JSON.stringify(recipeData), function (err) {
+	// 	res.send(JSON.stringify(recipeData));
+	// });
 });
+
+/**
+ * Scrapes urls from page
+ * @param {string} url 
+ */
+var scrapeURLS = async function (url) {
+	console.log('Starting request to: ' + url);
+	try {
+		var response = await request(url);
+		console.log(response);
+		console.log('Ending request to: ' + url);
+		return response;
+	} catch (err) {
+		return null;
+	}
+	// request(url, function (err, res, html) {
+	// 	if (err) {
+	// 		return null;
+	// 	}
+	// 	console.log('Ending Request to: ' + url);
+	// 	return Scraper.GetListOfRecipeURLS(html);
+	// });
+};
+
+/**
+ * Scrapes page from url
+ * @param {String} url 
+ */
+var scrapePage = async function (url) {
+	request(recipeURL, function (err, res, html) {
+		if (err) {
+			return null;
+		}
+
+		return Scraper.GetRecipeFromHTML(html, url);
+	});
+};
 
 app.listen('3000')
 exports = module.exports = app;
